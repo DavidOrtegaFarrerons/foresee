@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    container_name: go_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 3306
+      DB_USER: user
+      DB_PASSWORD: pass
+      DB_NAME: foresee
+    volumes:
+      - .:/app
+    ports:
+      - "4000:4000"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: foresee
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d foresee" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
