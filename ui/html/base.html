@@ -1,0 +1,20 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{block "title" .}}Foresee{{end}}</title>
+    <link rel="stylesheet" href="/static/css/output.css">
+</head>
+<body class="bg-bg-main text-text-primary min-h-screen flex flex-col">
+{{template "header" .}}
+
+<main class="flex-1 flex items-center justify-center">
+    {{block "main" .}}{{end}}
+</main>
+
+{{template "footer" .}}
+</body>
+</html>
+{{end}}

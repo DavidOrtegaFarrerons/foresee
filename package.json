@@ -1,0 +1,11 @@
+{
+  "name": "foresee",
+  "private": true,
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  },
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./ui/static/css/input.css -o ./ui/static/css/output.css --minify",
+    "watch:css": "npx tailwindcss -i ./ui/static/css/input.css -o ./ui/static/css/output.css --watch"
+  }
+}

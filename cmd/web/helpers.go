@@ -13,7 +13,7 @@ func (app *application) render(w http.ResponseWriter, status int, page string, d
 	}
 
 	buf := new(bytes.Buffer)
-	err := ts.Execute(buf, data)
+	err := ts.ExecuteTemplate(buf, "base", data)
 	if err != nil {
 		panic(err)
 	}
