@@ -11,5 +11,5 @@ func (app *application) routes() http.Handler {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("This is the homepage"))
+	app.render(w, http.StatusOK, "home.html", &templateData{})
 }
