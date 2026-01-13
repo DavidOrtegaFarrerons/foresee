@@ -1,0 +1,120 @@
+{{define "title"}}Create account{{end}}
+
+{{define "main"}}
+<div class="min-h-screen w-full bg-bg-main flex flex-col md:flex-row">
+    <div class="w-full flex flex-col md:flex-row items-center justify-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 gap-12 md:gap-0">
+
+        <!-- Left Panel (Info) -->
+        <div class="hidden md:block md:w-5/12 lg:w-1/2 px-6 lg:px-10">
+            <div class="max-w-md">
+                <h1 class="text-4xl font-bold text-text-primary mb-4">Predict the Future</h1>
+                <p class="text-text-secondary text-base lg:text-lg mb-8 leading-relaxed">
+                    Dive into a world of decentralized predictions. Use your virtual coins to express beliefs and earn rewards from correct forecasts.
+                </p>
+
+                <!-- Example Market Bar -->
+                <div class="space-y-5">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-text-muted">Outcome A</span>
+                            <span class="text-text-primary font-medium">62%</span>
+                        </div>
+                        <div class="h-2.5 rounded-full bg-border-subtle overflow-hidden">
+                            <div class="h-full bg-accent" style="width:62%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-text-muted">Outcome B</span>
+                            <span class="text-text-primary font-medium">38%</span>
+                        </div>
+                        <div class="h-2.5 rounded-full bg-border-subtle overflow-hidden">
+                            <div class="h-full bg-accent/40" style="width:38%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-10 text-xs text-text-muted max-w-md">
+                    No real money involved. Pure skill, forecasting, and transparent markets.
+                </p>
+            </div>
+        </div>
+
+        <!-- Right Panel (Form) -->
+        <div class="w-full md:w-7/12 lg:w-1/2 flex items-center justify-center">
+            <div class="w-full max-w-sm md:max-w-md lg:max-w-lg">
+                <div class="bg-bg-surface border border-border-subtle rounded-2xl p-6 sm:p-8 lg:p-10 shadow-lg">
+                    <h2 class="text-2xl font-semibold text-text-primary text-center mb-2">Create Your Account</h2>
+                    <p class="text-sm text-text-muted text-center mb-8">Join the community and start making predictions</p>
+
+                    <form action="/signup" method="POST" class="space-y-5">
+
+                        <!-- Username -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-primary mb-1">Username</label>
+                            {{with .Form.FieldErrors.username}}
+                            <p class="text-sm text-error mb-1">{{.}}</p>
+                            {{end}}
+                            <input
+                                    type="text"
+                                    name="username"
+                                    value="{{.Form.Username}}"
+                                    required
+                                    class="w-full rounded-lg bg-bg-main border border-border-subtle px-3 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                                    placeholder="yourname"
+                            />
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-primary mb-1">Email</label>
+                            {{with .Form.FieldErrors.email}}
+                            <p class="text-sm text-error mb-1">{{.}}</p>
+                            {{end}}
+                            <input
+                                    type="email"
+                                    name="email"
+                                    value="{{.Form.Email}}"
+                                    required
+                                    class="w-full rounded-lg bg-bg-main border border-border-subtle px-3 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                                    placeholder="you@example.com"
+                            />
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-primary mb-1">Password</label>
+                            {{with .Form.FieldErrors.password}}
+                            <p class="text-sm text-error mb-1">{{.}}</p>
+                            {{end}}
+                            <input
+                                    type="password"
+                                    name="password"
+                                    required
+                                    class="w-full rounded-lg bg-bg-main border border-border-subtle px-3 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                                    placeholder="••••••••"
+                            />
+                        </div>
+
+                        <!-- Submit -->
+                        <button
+                                type="submit"
+                                class="w-full rounded-lg bg-accent py-3 text-sm font-semibold text-black hover:bg-accent-hover transition-colors"
+                        >
+                            Sign up
+                        </button>
+                    </form>
+
+                    <div class="mt-8 text-center text-sm text-text-muted">
+                        Already have an account?
+                        <a href="/login" class="text-accent hover:underline">
+                            Log in
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{{end}}

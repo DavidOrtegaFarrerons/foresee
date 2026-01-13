@@ -1,11 +1,31 @@
 package main
 
 import (
+	"foresee/cmd/web/viewmodels"
+	"foresee/internal/models"
 	"html/template"
+	"net/http"
 	"path/filepath"
 )
 
 type templateData struct {
+	IsAuthenticated  bool
+	Flash            string
+	Form             any
+	MarketCategories []models.Category
+	ResolverTypes    []models.ResolverType
+
+	Markets []viewmodels.MarketView
+	Market  viewmodels.MarketView
+}
+
+func (app *application) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		Flash:            app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated:  isAuthenticated(r),
+		MarketCategories: models.AllCategories(),
+		ResolverTypes:    models.AllResolverTypes(),
+	}
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

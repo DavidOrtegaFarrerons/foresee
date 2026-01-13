@@ -1,18 +1,46 @@
-{{define "title"}}Foresee{{end}}
-
 {{define "main"}}
-<div class="max-w-xl px-6 text-center">
-    <h1 class="text-5xl font-semibold tracking-tight mb-6 text-text-primary">
+<!-- Page Header -->
+<div class="w-full max-w-7xl px-4 sm:px-6 lg:px-8 text-center mb-10">
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-text-primary mb-4">
         Foresee
     </h1>
-
-    <p class="text-text-secondary text-lg leading-relaxed mb-8">
-        Foresee is a simple prediction market where users create questions with multiple outcomes and bet virtual coins on what they believe will happen.
-        When a market resolves, all losing coins are redistributed to users who predicted correctly.
+    <p class="text-base sm:text-lg text-text-secondary">
+        Predict the future. Stake your belief. Earn for being right.
     </p>
+</div>
 
-    <p class="text-text-muted text-sm">
-        No real money. No odds engine. Just clear questions, transparent outcomes, and fair redistribution.
-    </p>
+<!-- Centered Cards Grid -->
+<div class="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
+        {{range .Markets}}
+        <div class="bg-bg-elevated border border-border-subtle rounded-xl p-5 hover:shadow-lg hover:border-accent transition-all flex flex-col w-full max-w-md mx-auto">
+            <!-- Title -->
+            <a href="/markets/{{.ID}}" class="text-lg font-semibold text-text-primary hover:text-accent transition-colors mb-2 leading-snug">
+                {{.Title}}
+            </a>
+
+            <!-- Meta -->
+            <p class="text-sm text-text-muted mb-6">
+                Expires: {{.ExpiresAt}}
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+                <form action="/markets/{{.ID}}/bet/in" method="POST" class="flex-1">
+                    <button type="submit"
+                            class="w-full py-2 text-sm font-medium text-white bg-success hover:bg-success/80 rounded-md transition">
+                        ✅ Yes
+                    </button>
+                </form>
+                <form action="/markets/{{.ID}}/bet/against" method="POST" class="flex-1">
+                    <button type="submit"
+                            class="w-full py-2 text-sm font-medium text-white bg-danger hover:bg-danger/80 rounded-md transition">
+                        ❌ No
+                    </button>
+                </form>
+            </div>
+        </div>
+        {{end}}
+    </div>
 </div>
 {{end}}

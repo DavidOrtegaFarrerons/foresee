@@ -1,0 +1,145 @@
+{{define "main"}}
+<main class="max-w-2xl mx-auto px-6 py-16">
+    <div class="bg-bg-elevated border border-border-subtle rounded-xl shadow-lg p-8 space-y-8">
+
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-text-primary">Create a Market</h1>
+            <p class="mt-2 text-text-muted text-sm">
+                Launch a prediction market with custom resolution, category and timing.
+            </p>
+        </div>
+
+        <!-- Non-field errors -->
+        {{with .Form.NonFieldErrors}}
+        <div class="rounded-lg border border-error bg-error/10 px-4 py-3 text-sm text-error">
+            {{range .}}
+            <p>{{.}}</p>
+            {{end}}
+        </div>
+        {{end}}
+
+        <form action="/markets" method="POST" class="space-y-6">
+
+            <!-- Title -->
+            <div class="space-y-2">
+                <label for="title" class="block text-sm font-medium text-text-secondary">
+                    Market Title
+                </label>
+                <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value="{{.Form.Title}}"
+                        class="w-full px-4 py-2 rounded-lg bg-input text-text-primary border
+                    {{if .Form.FieldErrors.title}}border-error focus:ring-error{{else}}border-border-subtle focus:ring-accent{{end}}
+                    focus:outline-none placeholder-text-muted"
+                        placeholder="e.g. Will Ethereum be above $3,000 by March?"
+                >
+                {{with .Form.FieldErrors.title}}
+                <p class="text-sm text-error">{{.}}</p>
+                {{end}}
+            </div>
+
+            <!-- Description -->
+            <div class="space-y-2">
+                <label for="description" class="block text-sm font-medium text-text-secondary">
+                    Description
+                </label>
+                <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        class="w-full px-4 py-2 rounded-lg bg-input text-text-primary border
+                    {{if .Form.FieldErrors.description}}border-error focus:ring-error{{else}}border-border-subtle focus:ring-accent{{end}}
+                    focus:outline-none placeholder-text-muted"
+                >{{.Form.Description}}</textarea>
+                {{with .Form.FieldErrors.description}}
+                <p class="text-sm text-error">{{.}}</p>
+                {{end}}
+            </div>
+
+            <!-- Category -->
+            <div class="space-y-2">
+                <label for="category" class="block text-sm font-medium text-text-secondary">
+                    Category
+                </label>
+                <select
+                        id="category"
+                        name="category"
+                        class="w-full px-4 py-2 rounded-lg bg-input text-text-primary border
+                    {{if .Form.FieldErrors.category}}border-error focus:ring-error{{else}}border-border-subtle focus:ring-accent{{end}}
+                    focus:outline-none"
+                >
+                    <option value="">Select a category</option>
+                    {{range .MarketCategories}}
+                    <option value="{{.}}" {{if eq . $.Form.Category}}selected{{end}}>
+                        {{.}}
+                    </option>
+                    {{end}}
+                </select>
+                {{with .Form.FieldErrors.category}}
+                <p class="text-sm text-error">{{.}}</p>
+                {{end}}
+            </div>
+
+            <!-- Resolver Type -->
+            <div class="space-y-2">
+                <label for="resolver_type" class="block text-sm font-medium text-text-secondary">
+                    Resolver Type
+                </label>
+                <select
+                        id="resolver_type"
+                        name="resolver_type"
+                        class="w-full px-4 py-2 rounded-lg bg-input text-text-primary border
+                    {{if .Form.FieldErrors.resolverType}}border-error focus:ring-error{{else}}border-border-subtle focus:ring-accent{{end}}
+                    focus:outline-none"
+                >
+                    <option value="">Select a resolver</option>
+                    {{range .ResolverTypes}}
+                    <option value="{{.}}" {{if eq . $.Form.ResolverType}}selected{{end}}>
+                        {{.}}
+                    </option>
+                    {{end}}
+                </select>
+                {{with .Form.FieldErrors.resolverType}}
+                <p class="text-sm text-error">{{.}}</p>
+                {{end}}
+            </div>
+
+            <!-- Expires At -->
+            <div class="space-y-2">
+                <label for="expires_at" class="block text-sm font-medium text-text-secondary">
+                    Expires At
+                </label>
+                <input
+                        type="datetime-local"
+                        id="expires_at"
+                        name="expires_at"
+                        value="{{.Form.ExpiresAt}}"
+                        class="w-full px-4 py-2 rounded-lg bg-input text-text-primary border
+                    {{if .Form.FieldErrors.expiresAt}}border-error focus:ring-error{{else}}border-border-subtle focus:ring-accent{{end}}
+                    focus:outline-none"
+                >
+                {{with .Form.FieldErrors.expiresAt}}
+                <p class="text-sm text-error">{{.}}</p>
+                {{end}}
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-4 text-center">
+                <button
+                        type="submit"
+                        class="w-full md:w-auto inline-flex items-center justify-center px-6 py-2
+                    text-sm font-medium rounded-lg bg-accent text-black
+                    hover:bg-accent-hover transition-colors
+                    focus:ring-2 focus:ring-offset-2 focus:ring-accent"
+                >
+                    🚀 Launch Market
+                </button>
+            </div>
+
+        </form>
+    </div>
+</main>
+{{end}}

@@ -7,15 +7,28 @@ import (
 
 func (app *application) routes() http.Handler {
 	router := http.NewServeMux()
+	baseChain := web.Chain{app.sessionManager.LoadAndSave, app.logRequest, app.authenticate}
+	authChain := append(baseChain, app.requiresAuthentication)
 
 	fileServer := http.FileServer(
 		web.NeuteredFileSystem(http.Dir("./ui/static")),
 	)
 
-	router.HandleFunc("/static", http.NotFound)
-	router.Handle("/static/", http.StripPrefix("/static", fileServer))
+	router.Handle("GET /favicon.ico", http.NotFoundHandler())
 
-	router.HandleFunc("/", app.home)
+	router.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	return router
+	router.Handle("GET /", http.HandlerFunc(app.home))
+
+	router.Handle("GET /signup", http.HandlerFunc(app.signup))
+	router.Handle("POST /signup", http.HandlerFunc(app.signupPost))
+
+	router.Handle("GET /login", http.HandlerFunc(app.login))
+	router.Handle("POST /login", http.HandlerFunc(app.loginPost))
+
+	router.Handle("GET /markets/create", authChain.ThenFunc(app.createMarket))
+	router.Handle("POST /markets", authChain.ThenFunc(app.createMarketPost))
+	router.Handle("GET /markets/{id}", http.HandlerFunc(app.viewMarket))
+
+	return baseChain.Then(router)
 }

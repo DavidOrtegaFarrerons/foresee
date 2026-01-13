@@ -1,3 +1,4 @@
+// tailwind.config.js
 module.exports = {
     content: [
         "./ui/html/**/*.html"
@@ -5,6 +6,13 @@ module.exports = {
     theme: {
         extend: {
             colors: {
+                error: '#ef4444',
+                success: '#22c55e',
+                danger: '#ef4444',
+                foreground: '#e5e7eb',
+                background: '#0b0f14',
+                input: '#111827',
+
                 bg: {
                     main: "#0b0f14",
                     surface: "#111827",
@@ -21,9 +29,7 @@ module.exports = {
                 accent: {
                     DEFAULT: "#22d3ee",
                     hover: "#67e8f9"
-                },
-                success: "#22c55e",
-                danger: "#ef4444"
+                }
             }
         }
     },
