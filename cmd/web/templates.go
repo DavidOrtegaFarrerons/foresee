@@ -6,10 +6,13 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+
+	"github.com/google/uuid"
 )
 
 type templateData struct {
 	IsAuthenticated  bool
+	Balance          int
 	Flash            string
 	Form             any
 	MarketCategories []models.Category
@@ -20,12 +23,31 @@ type templateData struct {
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
-	return &templateData{
+	data := &templateData{
 		Flash:            app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated:  isAuthenticated(r),
 		MarketCategories: models.AllCategories(),
 		ResolverTypes:    models.AllResolverTypes(),
+		Balance:          0,
 	}
+
+	if !data.IsAuthenticated {
+		return data
+	}
+
+	idStr := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return data
+	}
+	balance, err := app.users.Balance(id)
+	if err != nil {
+		return data
+	}
+
+	data.Balance = balance
+
+	return data
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

@@ -1,0 +1,3 @@
+ALTER TABLE IF EXISTS users 
+DROP COLUMN IF EXISTS balance,
+DROP COLUMN IF EXISTS last_daily_claim;

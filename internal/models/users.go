@@ -15,11 +15,14 @@ type User struct {
 	Username       string
 	Email          string
 	HashedPassword []byte
+	Balance        int
 }
 
 type UserModel struct {
 	DB *sql.DB
 }
+
+const initialBalance int = 1000
 
 func (m *UserModel) Insert(username, email, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -27,8 +30,8 @@ func (m *UserModel) Insert(username, email, password string) error {
 		return err
 	}
 
-	stmt := `INSERT INTO users (username, email, hashed_password) VALUES ($1, $2, $3)`
-	_, err = m.DB.Exec(stmt, username, email, hashedPassword)
+	stmt := `INSERT INTO users (username, email, hashed_password, balance) VALUES ($1, $2, $3, $4)`
+	_, err = m.DB.Exec(stmt, username, email, hashedPassword, initialBalance)
 	if err != nil {
 		var pgErr *pgconn.PgError
 
@@ -80,4 +83,15 @@ func (m *UserModel) Exists(id uuid.UUID) (bool, error) {
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
 
 	return exists, err
+}
+
+func (m *UserModel) Balance(id uuid.UUID) (int, error) {
+	var balance int
+	stmt := "SELECT balance FROM users WHERE id = $1"
+	err := m.DB.QueryRow(stmt, id).Scan(&balance)
+	if err != nil {
+		return 0, err
+	}
+
+	return balance, nil
 }
