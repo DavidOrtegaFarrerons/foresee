@@ -1,0 +1,1 @@
+ALTER TABLE IF EXISTS outcomes DROP COLUMN pool_amount;

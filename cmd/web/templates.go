@@ -3,20 +3,22 @@ package main
 import (
 	"foresee/cmd/web/viewmodels"
 	"foresee/internal/models"
+	"foresee/internal/services"
 	"html/template"
 	"net/http"
 	"path/filepath"
-
-	"github.com/google/uuid"
+	"time"
 )
 
 type templateData struct {
-	IsAuthenticated  bool
-	Balance          int
-	Flash            string
-	Form             any
-	MarketCategories []models.Category
-	ResolverTypes    []models.ResolverType
+	IsAuthenticated     bool
+	Balance             int
+	CanClaimDailyReward bool
+	Flash               string
+	FlashError          string
+	Form                any
+	MarketCategories    []models.Category
+	ResolverTypes       []models.ResolverType
 
 	Markets []viewmodels.MarketView
 	Market  viewmodels.MarketView
@@ -25,6 +27,7 @@ type templateData struct {
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	data := &templateData{
 		Flash:            app.sessionManager.PopString(r.Context(), "flash"),
+		FlashError:       app.sessionManager.PopString(r.Context(), "flash_error"),
 		IsAuthenticated:  isAuthenticated(r),
 		MarketCategories: models.AllCategories(),
 		ResolverTypes:    models.AllResolverTypes(),
@@ -35,17 +38,18 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		return data
 	}
 
-	idStr := app.sessionManager.GetString(r.Context(), "authenticatedUserID")
-	id, err := uuid.Parse(idStr)
+	id, err := app.getUserId(r)
 	if err != nil {
 		return data
 	}
-	balance, err := app.users.Balance(id)
+
+	balance, lastClaimedAt, err := app.users.GetTemplateInfo(id)
 	if err != nil {
 		return data
 	}
 
 	data.Balance = balance
+	data.CanClaimDailyReward = services.CanClaimReward(time.Now(), lastClaimedAt.Time)
 
 	return data
 }

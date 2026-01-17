@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"foresee/internal/models"
+	"foresee/internal/services"
 	"html/template"
 	"log"
 	"net/http"
@@ -24,7 +25,8 @@ type application struct {
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	users          *models.UserModel
-	markets        *models.MarketModel
+	marketService  *services.MarketService
+	betService     *services.BetService
 	sessionManager *scs.SessionManager
 	location       *time.Location
 }
@@ -86,17 +88,44 @@ func main() {
 		}
 	}
 
+	marketModel := models.MarketModel{
+		DB: db,
+	}
+
+	outcomeModel := models.OutcomeModel{
+		DB: db,
+	}
+
+	outcomeService := services.OutcomeService{
+		Outcomes: &outcomeModel,
+	}
+
+	marketService := services.MarketService{
+		Markets:        &marketModel,
+		OutcomeService: outcomeService,
+	}
+
+	userModel := models.UserModel{
+		DB: db,
+	}
+
+	betService := services.BetService{
+		Bets: &models.BetModel{
+			DB: db,
+		},
+		UserService:   &services.UserService{Users: &userModel},
+		MarketService: &marketService,
+		Outcome:       &outcomeModel,
+	}
+
 	app := application{
-		infoLog:       infoLog,
-		errorLog:      errorLog,
-		templateCache: tc,
-		formDecoder:   form.NewDecoder(),
-		users: &models.UserModel{
-			DB: db,
-		},
-		markets: &models.MarketModel{
-			DB: db,
-		},
+		infoLog:        infoLog,
+		errorLog:       errorLog,
+		templateCache:  tc,
+		formDecoder:    form.NewDecoder(),
+		users:          &userModel,
+		betService:     &betService,
+		marketService:  &marketService,
 		sessionManager: sesssionManager,
 		location:       location,
 	}

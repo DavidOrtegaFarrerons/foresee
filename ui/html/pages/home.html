@@ -1,5 +1,4 @@
 {{define "main"}}
-<!-- Page Header -->
 <div class="w-full max-w-7xl px-4 sm:px-6 lg:px-8 text-center mb-10">
     <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-text-primary mb-4">
         Foresee
@@ -9,38 +8,103 @@
     </p>
 </div>
 
-<!-- Centered Cards Grid -->
 <div class="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
-        {{range .Markets}}
-        <div class="bg-bg-elevated border border-border-subtle rounded-xl p-5 hover:shadow-lg hover:border-accent transition-all flex flex-col w-full max-w-md mx-auto">
-            <!-- Title -->
-            <a href="/markets/{{.ID}}" class="text-lg font-semibold text-text-primary hover:text-accent transition-colors mb-2 leading-snug">
-                {{.Title}}
+        {{range $m := .Markets}}
+        <div
+                class="bg-bg-elevated border border-border-subtle rounded-xl p-5 flex flex-col w-full max-w-md mx-auto"
+                data-market-id="{{$m.ID}}"
+        >
+            <a href="/markets/{{$m.ID}}" class="text-lg font-semibold text-text-primary hover:text-accent mb-2">
+                {{$m.Title}}
             </a>
 
-            <!-- Meta -->
-            <p class="text-sm text-text-muted mb-6">
-                Expires: {{.ExpiresAt}}
+            <p class="text-sm text-text-muted mb-4">
+                Expires: {{$m.ExpiresAt}}
             </p>
 
-            <!-- Action Buttons -->
-            <div class="flex gap-2">
-                <form action="/markets/{{.ID}}/bet/in" method="POST" class="flex-1">
-                    <button type="submit"
-                            class="w-full py-2 text-sm font-medium text-white bg-success hover:bg-success/80 rounded-md transition">
-                        Yes
-                    </button>
-                </form>
-                <form action="/markets/{{.ID}}/bet/against" method="POST" class="flex-1">
-                    <button type="submit"
-                            class="w-full py-2 text-sm font-medium text-white bg-danger hover:bg-danger/80 rounded-md transition">
-                        No
-                    </button>
-                </form>
+            <div class="flex gap-2 mb-4">
+                {{range $m.Outcomes}}
+                <button
+                        type="button"
+                        class='flex-1 py-2 text-sm font-medium text-white rounded-md
+    {{if eq .Label "yes"}}bg-success{{else}}bg-danger{{end}}'
+                        onclick="openInlineBet(this)"
+                        data-outcome-id="{{.ID}}"
+                        data-outcome-label="{{.Label}}"
+                        data-outcome-pool="{{.PoolAmount}}"
+                        data-total-pool="{{$m.TotalPool}}"
+                >
+                    {{.Label}}
+                </button>
+                {{end}}
             </div>
+
+            <form
+                    method="POST"
+                    action="/markets/{{$m.ID}}/bets"
+                    class="hidden space-y-3"
+            >
+                <input type="hidden" name="outcome_id">
+
+                <input
+                        type="number"
+                        name="amount"
+                        min="100"
+                        step="100"
+                        required
+                        class="w-full rounded-md bg-bg-main border border-border-subtle px-3 py-2 text-text-primary"
+                        oninput="updateProjection(this)"
+                >
+
+                <div class="text-sm text-text-secondary">
+                    <span>Potential payout:</span>
+                    <span class="font-medium text-text-primary ml-1 payout">0</span>
+                </div>
+
+                <button
+                        type="submit"
+                        class="w-full py-2 rounded-md bg-accent text-black font-medium"
+                >
+                    Bet
+                </button>
+            </form>
         </div>
         {{end}}
     </div>
 </div>
+
+<script>
+    function openInlineBet(button) {
+        const card = button.closest("[data-market-id]")
+        const form = card.querySelector("form")
+        const input = form.querySelector("input[name=outcome_id]")
+
+        input.value = button.dataset.outcomeId
+
+        card.querySelectorAll("form").forEach(f => f.classList.add("hidden"))
+        form.classList.remove("hidden")
+
+        form.dataset.outcomePool = button.dataset.outcomePool
+        form.dataset.totalPool = button.dataset.totalPool
+    }
+
+    function updateProjection(input) {
+        const form = input.closest("form")
+        const bet = parseInt(input.value || 0)
+        const outcomePool = parseInt(form.dataset.outcomePool)
+        const totalPool = parseInt(form.dataset.totalPool)
+
+        if (bet < 100) {
+            form.querySelector(".payout").textContent = "0"
+            return
+        }
+
+        const newOutcomePool = outcomePool + bet
+        const newTotalPool = totalPool + bet
+        const payout = Math.floor(newTotalPool * (bet / newOutcomePool))
+
+        form.querySelector(".payout").textContent = payout
+    }
+</script>
 {{end}}

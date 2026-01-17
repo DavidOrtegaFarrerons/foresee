@@ -45,6 +45,7 @@ type Market struct {
 	ExpiresAt    time.Time
 	Status       string
 	CreatedBy    uuid.UUID
+	Outcomes     []Outcome
 }
 
 type MarketModel struct {
@@ -52,6 +53,7 @@ type MarketModel struct {
 }
 
 func (m *MarketModel) Insert(
+	tx *sql.Tx,
 	title string,
 	description string,
 	category Category,
@@ -59,17 +61,29 @@ func (m *MarketModel) Insert(
 	resolverRef *uuid.UUID,
 	expiresAt time.Time,
 	userID uuid.UUID,
-) error {
+) (uuid.UUID, error) {
 	stmt := `INSERT INTO markets
 		(title, description, category, resolver_type, resolver_ref, expires_at, status, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id`
 
-	_, err := m.DB.Exec(stmt, title, description, category, resolverType, resolverRef, expiresAt, "open", userID)
+	var id uuid.UUID
+	err := tx.QueryRow(stmt,
+		title,
+		description,
+		category,
+		resolverType,
+		resolverRef,
+		expiresAt,
+		"open",
+		userID,
+	).Scan(&id)
+
 	if err != nil {
-		return err
+		return uuid.UUID{}, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (m *MarketModel) Latest() ([]*Market, error) {
@@ -113,12 +127,11 @@ func (m *MarketModel) Latest() ([]*Market, error) {
 	return markets, nil
 }
 
-func (m *MarketModel) Get(id uuid.UUID) (*Market, error) {
+func (m *MarketModel) Get(id uuid.UUID) (Market, error) {
 	stmt := `SELECT id, title, description, category, resolver_type, resolver_ref, expires_at, status, created_by
 			 FROM markets WHERE id = $1`
 
-	market := &Market{}
-
+	var market Market
 	err := m.DB.QueryRow(stmt, id).Scan(&market.ID,
 		&market.Title,
 		&market.Description,
@@ -130,7 +143,7 @@ func (m *MarketModel) Get(id uuid.UUID) (*Market, error) {
 		&market.CreatedBy,
 	)
 	if err != nil {
-		return nil, err
+		return Market{}, err
 	}
 
 	return market, nil

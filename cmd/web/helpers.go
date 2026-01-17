@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 
 	"github.com/go-playground/form"
+	"github.com/google/uuid"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -74,4 +75,8 @@ func isAuthenticated(r *http.Request) bool {
 	}
 
 	return isAuthenticated
+}
+
+func (app *application) getUserId(r *http.Request) (uuid.UUID, error) {
+	return uuid.Parse(app.sessionManager.GetString(r.Context(), "authenticatedUserID"))
 }

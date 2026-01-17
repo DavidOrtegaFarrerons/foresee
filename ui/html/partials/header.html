@@ -8,9 +8,24 @@
         </a>
 
         <!-- Right: Authenticated Navigation -->
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-4 sm:gap-6">
             {{if .IsAuthenticated}}
-            <span class="text-sm text-text-muted">Balance: <span class="text-text-primary font-medium">{{.Balance}}</span></span>
+            <!-- Balance -->
+            <span class="text-sm text-text-muted">
+                    Balance: <span class="text-text-primary font-medium">{{.Balance}} 🪙</span>
+                </span>
+
+            <!-- Daily Claim Button -->
+            {{if .CanClaimDailyReward}}
+            <form action="/users/me/daily-claim" method="POST">
+                <button type="submit"
+                        class="text-xs sm:text-sm px-3 py-1.5 rounded-md border border-accent text-accent hover:bg-accent hover:text-black transition-colors">
+                    🪙 Claim +1000
+                </button>
+            </form>
+            {{end}}
+
+            <!-- Create Market Link -->
             <a href="/markets/create" class="text-sm font-medium text-accent hover:underline transition">
                 + Create Market
             </a>

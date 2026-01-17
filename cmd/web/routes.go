@@ -29,6 +29,9 @@ func (app *application) routes() http.Handler {
 	router.Handle("GET /markets/create", authChain.ThenFunc(app.createMarket))
 	router.Handle("POST /markets", authChain.ThenFunc(app.createMarketPost))
 	router.Handle("GET /markets/{id}", http.HandlerFunc(app.viewMarket))
+	router.Handle("POST /markets/{id}/bets", authChain.ThenFunc(app.createBetPost))
+
+	router.Handle("POST /users/me/daily-claim", authChain.ThenFunc(app.dailyClaimPost))
 
 	return baseChain.Then(router)
 }

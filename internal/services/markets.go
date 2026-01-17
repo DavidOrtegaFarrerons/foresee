@@ -8,7 +8,8 @@ import (
 )
 
 type MarketService struct {
-	Markets *models.MarketModel
+	Markets        *models.MarketModel
+	OutcomeService OutcomeService
 }
 
 func (s *MarketService) Create(
@@ -34,7 +35,15 @@ func (s *MarketService) Create(
 		resolverRef = userID
 	}
 
-	err = s.Markets.Insert(
+	tx, err := s.Markets.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	id, err := s.Markets.Insert(
+		tx,
 		title,
 		description,
 		category,
@@ -48,5 +57,41 @@ func (s *MarketService) Create(
 		return err
 	}
 
-	return nil
+	err = s.OutcomeService.CreateDefaultForMarket(tx, id)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (s *MarketService) Get(id uuid.UUID) (models.Market, error) {
+	return s.Markets.Get(id)
+}
+
+func (s *MarketService) Latest() ([]*models.Market, error) {
+	markets, err := s.Markets.Latest()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(markets) == 0 {
+		return markets, nil
+	}
+
+	marketIDs := make([]uuid.UUID, len(markets))
+	for i, m := range markets {
+		marketIDs[i] = m.ID
+	}
+
+	outcomesByMarket, err := s.OutcomeService.ForMarkets(marketIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range markets {
+		m.Outcomes = outcomesByMarket[m.ID]
+	}
+
+	return markets, nil
 }

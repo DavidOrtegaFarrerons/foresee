@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -15,6 +16,7 @@ type User struct {
 	Username       string
 	Email          string
 	HashedPassword []byte
+	LastClaimedAt  sql.NullTime
 	Balance        int
 }
 
@@ -85,13 +87,46 @@ func (m *UserModel) Exists(id uuid.UUID) (bool, error) {
 	return exists, err
 }
 
-func (m *UserModel) Balance(id uuid.UUID) (int, error) {
+func (m *UserModel) GetTemplateInfo(id uuid.UUID) (int, sql.NullTime, error) {
 	var balance int
-	stmt := "SELECT balance FROM users WHERE id = $1"
-	err := m.DB.QueryRow(stmt, id).Scan(&balance)
+	var lastClaimedAt sql.NullTime
+	stmt := "SELECT balance, last_daily_claim FROM users WHERE id = $1"
+	err := m.DB.QueryRow(stmt, id).Scan(&balance, &lastClaimedAt)
 	if err != nil {
-		return 0, err
+		return 0, sql.NullTime{}, err
 	}
 
-	return balance, nil
+	return balance, lastClaimedAt, nil
+}
+
+func (m *UserModel) SelectForUpdate(tx *sql.Tx, id uuid.UUID) (User, error) {
+	var user User
+	stmt := `SELECT id, balance, last_daily_claim
+			FROM users
+			WHERE id = $1
+			FOR UPDATE
+			`
+
+	err := tx.QueryRow(stmt, id).Scan(&user.ID, &user.Balance, &user.LastClaimedAt)
+	if err != nil {
+		return User{}, err
+	}
+
+	return user, nil
+}
+
+func (m *UserModel) ApplyDailyClaim(tx *sql.Tx, id uuid.UUID, balance int, lastClaimedAt time.Time) error {
+	stmt := `UPDATE users SET balance = $1, last_daily_claim = $2 WHERE id = $3`
+	_, err := tx.Exec(stmt, balance, lastClaimedAt, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *UserModel) DecreaseBalanceBy(tx *sql.Tx, id uuid.UUID, amount int) error {
+	stmt := `UPDATE users SET balance = balance - $1 WHERE id = $2`
+	_, err := tx.Exec(stmt, amount, id)
+	return err
 }

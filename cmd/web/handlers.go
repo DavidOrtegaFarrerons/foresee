@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"foresee/cmd/web/viewmodels"
 	"foresee/internal/models"
 	"foresee/internal/services"
@@ -33,24 +34,30 @@ type createMarketForm struct {
 	validator.Validator `form:"-"`
 }
 
+type placeBetForm struct {
+	OutcomeID string `form:"outcome_id"`
+	Amount    int    `form:"amount"`
+	validator.Validator
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	markets, err := app.markets.Latest()
-	if err != nil {
-		app.serverError(w, err)
-	}
-	marketViews := []viewmodels.MarketView{}
-	for _, m := range markets {
-		marketView := viewmodels.NewMarketView(*m, app.location)
-		marketViews = append(marketViews, marketView)
-	}
+	markets, err := app.marketService.Latest()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
+	marketViews := make([]viewmodels.MarketView, 0, len(markets))
+	for _, m := range markets {
+		marketViews = append(
+			marketViews,
+			viewmodels.NewMarketView(*m, app.location),
+		)
+	}
+
 	data := app.newTemplateData(r)
 	data.Markets = marketViews
-	app.infoLog.Println(data.Markets)
+
 	app.render(w, http.StatusOK, "home.html", data)
 }
 
@@ -176,17 +183,13 @@ func (app *application) createMarketPost(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	s := services.MarketService{
-		Markets: app.markets,
-	}
-
-	id, err := uuid.Parse(app.sessionManager.GetString(r.Context(), "authenticatedUserID"))
+	id, err := app.getUserId(r)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	err = s.Create(
+	err = app.marketService.Create(
 		form.Title,
 		form.Description,
 		form.Category,
@@ -208,16 +211,93 @@ func (app *application) viewMarket(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 	}
 
-	m, err := app.markets.Get(id)
+	m, err := app.marketService.Get(id)
 	if err != nil {
 		app.serverError(w, err)
 	}
 
-	if m == nil {
-		http.NotFound(w, r)
+	data := app.newTemplateData(r)
+	data.Market = viewmodels.NewMarketView(m, app.location)
+	data.Form = placeBetForm{}
+	app.render(w, http.StatusOK, "detail_market.html", data)
+}
+
+func (app *application) dailyClaimPost(w http.ResponseWriter, r *http.Request) {
+	id, err := app.getUserId(r)
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
 
-	data := app.newTemplateData(r)
-	data.Market = viewmodels.NewMarketView(*m, app.location)
-	app.render(w, http.StatusOK, "detail_market.html", data)
+	s := services.UserService{Users: app.users}
+	redirectTo := r.Header.Get("Referer")
+	if redirectTo == "" {
+		redirectTo = "/"
+	}
+	err = s.ClaimDailyReward(id)
+	if err != nil {
+
+		if errors.Is(err, services.ErrDailyRewardNotAvailable) {
+			app.sessionManager.Put(r.Context(), "flash", err.Error())
+			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+			return
+		}
+
+		app.serverError(w, err)
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", fmt.Sprintf("Your reward of %d has been added to your balance", services.DailyRewardAmmount))
+	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+}
+
+func (app *application) createBetPost(w http.ResponseWriter, r *http.Request) {
+	marketID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	var form placeBetForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	form.Validator.CheckField(validator.NotBlank(form.OutcomeID), "outcome_id", "There has been an error with your request, please try again later")
+	form.Validator.CheckField(validator.MinNumber(form.Amount, models.MinimumBetAmount), "amount", "The minimum bet is 100")
+
+	redirectTo := r.Header.Get("Referer")
+	if redirectTo == "" {
+		redirectTo = "/"
+	}
+
+	if !form.Valid() {
+		app.sessionManager.Put(r.Context(), "flash", "TODO FIX THIS ERRORS")
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
+
+	outcomeID, err := uuid.Parse(form.OutcomeID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	userID, err := app.getUserId(r)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err = app.betService.Place(userID, marketID, outcomeID, form.Amount)
+	if err != nil {
+		app.sessionManager.Put(r.Context(), "flash_error", err.Error())
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
+
+	//TODO MAKE THIS MESSAGE PRETTIER / SAY THE AMOUNT AND THE MARKET AND OUTCOME
+	app.sessionManager.Put(r.Context(), "flash", "Your bet has been submitted successfully")
+	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }

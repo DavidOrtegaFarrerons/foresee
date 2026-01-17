@@ -81,3 +81,7 @@ func IsValidDate(value string) bool {
 
 	return true
 }
+
+func MinNumber(number, min int) bool {
+	return number >= min
+}

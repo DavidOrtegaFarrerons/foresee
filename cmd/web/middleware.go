@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 func (app *application) logRequest(next http.Handler) http.Handler {
@@ -17,7 +15,7 @@ func (app *application) logRequest(next http.Handler) http.Handler {
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id, err := uuid.Parse(app.sessionManager.GetString(r.Context(), "authenticatedUserID"))
+		id, err := app.getUserId(r)
 		if err != nil {
 			next.ServeHTTP(w, r)
 			return

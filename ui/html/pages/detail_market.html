@@ -50,25 +50,57 @@
                 <h3 class="text-lg font-semibold text-text-primary mb-2">Bet</h3>
 
                 <div class="flex gap-2">
-                    <form action="/markets/{{.Market.ID}}/bet/in" method="POST" class="flex-1">
-                        <button type="submit"
-                                class="w-full py-3 text-base font-medium text-white bg-success hover:bg-success/80 rounded-md transition">
-                            Yes
-                        </button>
-                    </form>
-                    <form action="/markets/{{.Market.ID}}/bet/against" method="POST" class="flex-1">
-                        <button type="submit"
-                                class="w-full py-3 text-base font-medium text-white bg-danger hover:bg-danger/80 rounded-md transition">
-                            No
-                        </button>
-                    </form>
+                    {{range .Market.Outcomes}}
+                    <button
+                            type="button"
+                            onclick="openBetModal('{{.ID}}')"
+                            class='flex-1 py-3 text-base font-medium text-white rounded-md transition
+                            {{if eq .Label "yes"}}bg-success hover:bg-success/80{{else}}bg-danger hover:bg-danger/80{{end}}'>
+                    {{.Label}}
+                    </button>
+                    {{end}}
                 </div>
 
-                <!-- Amount Placeholder -->
-                <div>
-                    <label for="amount" class="text-sm font-medium text-text-secondary block mb-1">Amount</label>
-                    <input type="number" name="amount" id="amount" placeholder="100"
-                           class="w-full bg-input border border-border-subtle text-text-primary rounded-md px-4 py-2 focus:ring-2 focus:ring-accent outline-none" />
+                <div id="bet-modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 z-50">
+                    <div class="w-full max-w-sm bg-bg-elevated rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-text-primary mb-4">
+                            Place bet
+                        </h3>
+
+                        <form method="POST" action="/markets/{{.Market.ID}}/bets" class="space-y-4">
+                            <input type="hidden" name="outcome_id" id="bet-outcome-id">
+
+                            <div>
+                                <label class="block text-sm text-text-secondary mb-1">
+                                    Amount
+                                </label>
+                                <input
+                                        type="number"
+                                        name="amount"
+                                        min="100"
+                                        step="100"
+                                        required
+                                        class="w-full rounded-md bg-bg-main border border-border-subtle px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                                >
+                                <p class="text-xs text-text-muted mt-1">
+                                    Minimum bet: 100 coins
+                                </p>
+
+                                {{with .Form.FieldErrors.amount}}
+                                <p class="text-sm text-danger mt-1">{{.}}</p>
+                                {{end}}
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button type="submit" class="flex-1 py-2 rounded-md bg-accent text-black font-medium">
+                                    Confirm
+                                </button>
+                                <button type="button" onclick="closeBetModal()" class="flex-1 py-2 rounded-md border border-border-subtle text-text-secondary">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -81,4 +113,18 @@
         </div>
     </div>
 </div>
+<script>
+    function openBetModal(outcomeId) {
+        document.getElementById("bet-outcome-id").value = outcomeId
+        const modal = document.getElementById("bet-modal")
+        modal.classList.remove("hidden")
+        modal.classList.add("flex")
+    }
+
+    function closeBetModal() {
+        const modal = document.getElementById("bet-modal")
+        modal.classList.add("hidden")
+        modal.classList.remove("flex")
+    }
+</script>
 {{end}}
