@@ -1,0 +1,75 @@
+{{define "title"}}Resolve · {{.Market.Title}}{{end}}
+
+{{define "main"}}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8">
+        <h1 class="text-2xl sm:text-3xl font-semibold text-text-primary">
+            Resolve Market
+        </h1>
+        <p class="mt-2 text-sm text-text-muted">
+            Select the correct outcome. This action is final and cannot be undone.
+        </p>
+    </div>
+
+    <div class="bg-bg-elevated border border-border-subtle rounded-xl p-6 space-y-6">
+
+        <div>
+            <h2 class="text-lg font-medium text-text-primary">
+                {{.Market.Title}}
+            </h2>
+            <p class="mt-1 text-sm text-text-muted">
+                {{.Market.Description}}
+            </p>
+        </div>
+
+        <form method="POST" action="/markets/{{.Market.ID}}/resolve" class="space-y-6">
+
+            <div class="space-y-3">
+                {{range .Market.Outcomes}}
+                <label class="flex items-center gap-3 p-4 rounded-lg border border-border-subtle cursor-pointer hover:bg-bg-main transition">
+                    <input
+                            type="radio"
+                            name="outcome_id"
+                            value="{{.ID}}"
+                            required
+                            class="h-4 w-4 text-accent focus:ring-accent"
+                    >
+                    <span class="text-text-primary font-medium capitalize">
+                        {{.Label}}
+                    </span>
+                </label>
+                {{end}}
+            </div>
+
+            {{with .Form.FieldErrors.outcome_id}}
+            <p class="text-sm text-danger">{{.}}</p>
+            {{end}}
+
+            <div class="rounded-lg bg-bg-main border border-border-subtle p-4 text-sm text-text-muted">
+                ⚠️ Once resolved, all losing bets will be redistributed to winning bettors.
+                This action cannot be reversed.
+            </div>
+
+            <div class="flex gap-3">
+                <button
+                        type="submit"
+                        class="flex-1 py-2 rounded-md bg-accent text-black font-medium hover:bg-accent-hover transition"
+                >
+                    Confirm Resolution
+                </button>
+
+                <a
+                        href="/account"
+                        class="flex-1 py-2 rounded-md border border-border-subtle text-text-secondary text-center hover:bg-bg-main transition"
+                >
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+{{end}}

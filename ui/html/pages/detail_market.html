@@ -4,10 +4,8 @@
 <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col lg:flex-row lg:items-start gap-10">
 
-        <!-- Left/Main Section -->
         <div class="flex-1 space-y-8">
 
-            <!-- Market Header -->
             <div class="space-y-2">
                 <p class="text-sm text-text-muted">
                     Volume: $10,000,000 • Expires {{.Market.ExpiresAt}}
@@ -22,19 +20,16 @@
                 </div>
             </div>
 
-            <!-- Chance / Chart Placeholder -->
             <div class="space-y-4">
                 <div class="flex items-center gap-4">
                     <p class="text-accent text-xl font-semibold">22% chance</p>
                     <span class="text-success text-sm font-medium">▲ 13%</span>
                 </div>
-                <!-- Fake chart block -->
                 <div class="bg-border-subtle/20 h-48 rounded-lg flex items-center justify-center text-text-muted text-sm border border-border-subtle">
                     📈 Chart Coming Soon
                 </div>
             </div>
 
-            <!-- Extra (order book / context) -->
             <div class="space-y-4">
                 <h2 class="text-lg font-semibold text-text-primary">Market Context</h2>
                 <p class="text-text-muted">{{.Market.Description}}</p>
@@ -42,25 +37,52 @@
 
         </div>
 
-        <!-- Right Sidebar / Trade Box -->
         <div class="w-full lg:max-w-sm lg:sticky lg:top-10 space-y-4">
 
-            <!-- Buy Box -->
             <div class="rounded-xl border border-border-subtle bg-bg-elevated p-6 space-y-6">
                 <h3 class="text-lg font-semibold text-text-primary mb-2">Bet</h3>
 
                 <div class="flex gap-2">
                     {{range .Market.Outcomes}}
+                    {{if eq $.Market.Status "open"}}
                     <button
                             type="button"
                             onclick="openBetModal('{{.ID}}')"
                             class='flex-1 py-3 text-base font-medium text-white rounded-md transition
-                            {{if eq .Label "yes"}}bg-success hover:bg-success/80{{else}}bg-danger hover:bg-danger/80{{end}}'>
-                    {{.Label}}
+                                {{if eq .Label "yes"}}bg-success hover:bg-success/80{{else}}bg-danger hover:bg-danger/80{{end}}'>
+                        {{.Label}}
                     </button>
+
+                    {{else if eq $.Market.Status "expired"}}
+                    <button
+                            type="button"
+                            disabled
+                            class="flex-1 py-3 text-base font-medium rounded-md bg-gray-400 text-gray-700 cursor-not-allowed">
+                        {{.Label}}
+                    </button>
+
+                    {{else if eq $.Market.Status "resolved"}}
+                    {{if .IsWinner}}
+                    <button
+                            type="button"
+                            disabled
+                            class='flex-1 py-3 text-base font-medium text-white rounded-md
+                                    {{if eq .Label "yes"}}bg-success{{else}}bg-danger{{end}}'>
+                        {{.Label}}
+                    </button>
+                    {{else}}
+                    <button
+                            type="button"
+                            disabled
+                            class="flex-1 py-3 text-base font-medium rounded-md bg-gray-400 text-gray-700 cursor-not-allowed">
+                        {{.Label}}
+                    </button>
+                    {{end}}
+                    {{end}}
                     {{end}}
                 </div>
 
+                {{if eq .Market.Status "open"}}
                 <div id="bet-modal" class="fixed inset-0 hidden items-center justify-center bg-black/60 z-50">
                     <div class="w-full max-w-sm bg-bg-elevated rounded-xl p-6">
                         <h3 class="text-lg font-semibold text-text-primary mb-4">
@@ -102,17 +124,14 @@
                         </form>
                     </div>
                 </div>
+                {{end}}
 
-                <!-- Submit Button -->
-                <button type="button"
-                        class="w-full py-2 text-sm font-medium text-black bg-accent hover:bg-accent-hover rounded-md transition">
-                    Confirm Bet
-                </button>
             </div>
 
         </div>
     </div>
 </div>
+
 <script>
     function openBetModal(outcomeId) {
         document.getElementById("bet-outcome-id").value = outcomeId

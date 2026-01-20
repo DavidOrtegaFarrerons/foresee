@@ -26,10 +26,14 @@ func (app *application) routes() http.Handler {
 	router.Handle("GET /login", http.HandlerFunc(app.login))
 	router.Handle("POST /login", http.HandlerFunc(app.loginPost))
 
+	router.Handle("GET /account", http.HandlerFunc(app.account))
+
 	router.Handle("GET /markets/create", authChain.ThenFunc(app.createMarket))
 	router.Handle("POST /markets", authChain.ThenFunc(app.createMarketPost))
 	router.Handle("GET /markets/{id}", http.HandlerFunc(app.viewMarket))
 	router.Handle("POST /markets/{id}/bets", authChain.ThenFunc(app.createBetPost))
+	router.Handle("GET /markets/{id}/resolve", authChain.ThenFunc(app.resolveMarket))
+	router.Handle("POST /markets/{id}/resolve", authChain.ThenFunc(app.resolveMarketPost))
 
 	router.Handle("POST /users/me/daily-claim", authChain.ThenFunc(app.dailyClaimPost))
 

@@ -1,0 +1,1 @@
+ALTER TABLE IF EXISTS bets DROP COLUMN payout_amount;

@@ -19,9 +19,11 @@ type templateData struct {
 	Form                any
 	MarketCategories    []models.Category
 	ResolverTypes       []models.ResolverType
+	BetHistory          []models.BetHistoryRow
 
-	Markets []viewmodels.MarketView
-	Market  viewmodels.MarketView
+	Markets            []viewmodels.MarketView
+	Market             viewmodels.MarketView
+	PendingResolutions []models.Market
 }
 
 func (app *application) newTemplateData(r *http.Request) *templateData {

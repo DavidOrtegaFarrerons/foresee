@@ -51,3 +51,7 @@ func (s *UserService) DecreaseBalanceBy(tx *sql.Tx, id uuid.UUID, amount int) er
 func CanClaimReward(now time.Time, lastClaimedAt time.Time) bool {
 	return now.After(lastClaimedAt.Add(24 * time.Hour))
 }
+
+func (s *UserService) IncreaseBalanceBy(tx *sql.Tx, userID uuid.UUID, amount int) error {
+	return s.Users.IncreaseBalanceBy(tx, userID, amount)
+}

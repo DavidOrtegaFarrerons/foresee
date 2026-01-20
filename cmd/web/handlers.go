@@ -40,6 +40,11 @@ type placeBetForm struct {
 	validator.Validator
 }
 
+type resolveMarketForm struct {
+	OutcomeID string `form:"outcome_id"`
+	validator.Validator
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	markets, err := app.marketService.Latest()
 	if err != nil {
@@ -152,6 +157,28 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (app *application) account(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	userID, err := app.getUserId(r)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	userBetHistory, err := app.betService.GetUserBetHistory(userID)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	marketsPendingResolution, err := app.marketService.PendingResolution(userID)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	data.PendingResolutions = marketsPendingResolution
+
+	data.BetHistory = userBetHistory
+	app.render(w, http.StatusOK, "account.html", data)
+}
+
 func (app *application) createMarket(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = createMarketForm{}
@@ -218,6 +245,7 @@ func (app *application) viewMarket(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Market = viewmodels.NewMarketView(m, app.location)
+	app.infoLog.Printf("%q", data.Market.Outcomes)
 	data.Form = placeBetForm{}
 	app.render(w, http.StatusOK, "detail_market.html", data)
 }
@@ -300,4 +328,83 @@ func (app *application) createBetPost(w http.ResponseWriter, r *http.Request) {
 	//TODO MAKE THIS MESSAGE PRETTIER / SAY THE AMOUNT AND THE MARKET AND OUTCOME
 	app.sessionManager.Put(r.Context(), "flash", "Your bet has been submitted successfully")
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+}
+
+func (app *application) resolveMarket(w http.ResponseWriter, r *http.Request) {
+	marketID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	m, err := app.marketService.Get(marketID)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	userID, err := app.getUserId(r)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if *m.ResolverRef != userID {
+		app.clientError(w, http.StatusForbidden)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Market = viewmodels.NewMarketView(m, app.location)
+	data.Form = resolveMarketForm{}
+	app.render(w, http.StatusOK, "resolve_market.html", data)
+}
+
+func (app *application) resolveMarketPost(w http.ResponseWriter, r *http.Request) {
+	marketID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	var form resolveMarketForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	form.Validator.CheckField(validator.NotBlank(form.OutcomeID), "outcome_id", "The outcome must not be empty")
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		m, err := app.marketService.Get(marketID)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		data.Market = viewmodels.NewMarketView(m, app.location)
+		app.render(w, http.StatusUnprocessableEntity, "resolve_market.html", data)
+		return
+	}
+
+	outcomeID, err := uuid.Parse(form.OutcomeID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	userID, err := app.getUserId(r)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err = app.marketService.ResolveMarket(marketID, userID, outcomeID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Thanks for resolving the market")
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

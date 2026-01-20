@@ -2,20 +2,16 @@
 <header class="w-full bg-bg-main border-b border-border-subtle">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-        <!-- Left: Logo -->
         <a href="/" class="text-xl font-semibold text-text-primary hover:text-accent transition">
             Foresee
         </a>
 
-        <!-- Right: Authenticated Navigation -->
         <div class="flex items-center gap-4 sm:gap-6">
             {{if .IsAuthenticated}}
-            <!-- Balance -->
             <span class="text-sm text-text-muted">
-                    Balance: <span class="text-text-primary font-medium">{{.Balance}} 🪙</span>
-                </span>
+                Balance: <span class="text-text-primary font-medium">{{.Balance}} 🪙</span>
+            </span>
 
-            <!-- Daily Claim Button -->
             {{if .CanClaimDailyReward}}
             <form action="/users/me/daily-claim" method="POST">
                 <button type="submit"
@@ -25,9 +21,12 @@
             </form>
             {{end}}
 
-            <!-- Create Market Link -->
             <a href="/markets/create" class="text-sm font-medium text-accent hover:underline transition">
                 + Create Market
+            </a>
+
+            <a href="/account" class="text-sm font-medium text-text-primary hover:text-accent transition">
+                Account
             </a>
             {{else}}
             <a href="/login" class="text-sm font-medium text-text-muted hover:text-text-primary transition">

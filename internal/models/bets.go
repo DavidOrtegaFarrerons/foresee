@@ -37,3 +37,36 @@ func (m *BetModel) Place(tx *sql.Tx, userID uuid.UUID, marketID uuid.UUID, outco
 
 	return err
 }
+
+func (m *BetModel) ForMarketForUpdate(tx *sql.Tx, marketID uuid.UUID) ([]Bet, error) {
+	stmt := `SELECT id, user_id, amount, outcome_id FROM bets WHERE market_id = $1 FOR UPDATE`
+
+	rows, err := tx.Query(stmt, marketID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var bets []Bet
+
+	for rows.Next() {
+		var b Bet
+		err = rows.Scan(&b.ID, &b.UserID, &b.Amount, &b.OutcomeID)
+		if err != nil {
+			return nil, err
+		}
+		bets = append(bets, b)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bets, nil
+}
+
+func (m *BetModel) SetPayout(tx *sql.Tx, betID uuid.UUID, payout int) error {
+	stmt := `UPDATE bets SET payout_amount = $1, settled_at = NOW() WHERE id = $2`
+	_, err := tx.Exec(stmt, payout, betID)
+	return err
+}

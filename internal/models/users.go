@@ -130,3 +130,9 @@ func (m *UserModel) DecreaseBalanceBy(tx *sql.Tx, id uuid.UUID, amount int) erro
 	_, err := tx.Exec(stmt, amount, id)
 	return err
 }
+
+func (m *UserModel) IncreaseBalanceBy(tx *sql.Tx, userID uuid.UUID, amount int) error {
+	stmt := `UPDATE users SET balance = balance + $1 WHERE id = $2`
+	_, err := tx.Exec(stmt, amount, userID)
+	return err
+}

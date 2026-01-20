@@ -1,0 +1,3 @@
+ALTER TABLE IF EXISTS bets
+    ADD COLUMN payout_amount INTEGER NULL,
+    ADD COLUMN settled_at TIMESTAMP NULL

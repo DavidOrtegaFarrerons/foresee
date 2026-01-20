@@ -109,6 +109,10 @@ func main() {
 		DB: db,
 	}
 
+	userService := services.UserService{
+		Users: &userModel,
+	}
+
 	betService := services.BetService{
 		Bets: &models.BetModel{
 			DB: db,
@@ -117,6 +121,9 @@ func main() {
 		MarketService: &marketService,
 		Outcome:       &outcomeModel,
 	}
+
+	marketService.BetService = betService
+	marketService.UserService = userService
 
 	app := application{
 		infoLog:        infoLog,

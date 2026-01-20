@@ -9,7 +9,9 @@ import (
 
 type MarketService struct {
 	Markets        *models.MarketModel
+	BetService     BetService
 	OutcomeService OutcomeService
+	UserService    UserService
 }
 
 func (s *MarketService) Create(
@@ -29,10 +31,13 @@ func (s *MarketService) Create(
 	}
 
 	expiresAt, err := time.ParseInLocation("2006-01-02T15:04", expiresAtStr, loc)
+	if err != nil {
+		return err
+	}
 
-	resolverRef := uuid.UUID{}
+	var resolverRef *uuid.UUID
 	if resolverType == models.ResolverCreator {
-		resolverRef = userID
+		resolverRef = &userID
 	}
 
 	tx, err := s.Markets.DB.Begin()
@@ -48,11 +53,10 @@ func (s *MarketService) Create(
 		description,
 		category,
 		resolverType,
-		&resolverRef,
+		resolverRef,
 		expiresAt,
 		userID,
 	)
-
 	if err != nil {
 		return err
 	}
@@ -66,7 +70,18 @@ func (s *MarketService) Create(
 }
 
 func (s *MarketService) Get(id uuid.UUID) (models.Market, error) {
-	return s.Markets.Get(id)
+	m, err := s.Markets.Get(id)
+	if err != nil {
+		return models.Market{}, err
+	}
+
+	o, err := s.OutcomeService.ForMarket(m.ID)
+	if err != nil {
+		return models.Market{}, err
+	}
+
+	m.Outcomes = o
+	return m, nil
 }
 
 func (s *MarketService) Latest() ([]*models.Market, error) {
@@ -94,4 +109,115 @@ func (s *MarketService) Latest() ([]*models.Market, error) {
 	}
 
 	return markets, nil
+}
+
+func (s *MarketService) PendingResolution(userID uuid.UUID) ([]models.Market, error) {
+	return s.Markets.PendingResolution(userID)
+}
+
+func (s *MarketService) ResolveMarket(marketID uuid.UUID, userID uuid.UUID, outcomeID uuid.UUID) error {
+	tx, err := s.Markets.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	m, err := s.Markets.SelectForUpdate(tx, marketID)
+	if err != nil {
+		return err
+	}
+
+	if m.ResolverType != models.ResolverCreator {
+		return models.ErrUserNotAuthorized
+	}
+
+	if m.ResolverRef == nil || *m.ResolverRef != userID {
+		return models.ErrUserNotAuthorized
+	}
+
+	if m.ResolvedOutcomeID != nil {
+		return models.ErrMarketAlreadyResolved
+	}
+
+	if time.Now().Before(m.ExpiresAt) {
+		return models.ErrMarketNotExpired
+	}
+
+	outcomeInMarket, err := s.OutcomeService.ExistsForMarketTx(tx, outcomeID, marketID)
+	if err != nil {
+		return err
+	}
+
+	if !outcomeInMarket {
+		return models.ErrOutcomeDoesNotBelongToMarket
+	}
+
+	bets, err := s.BetService.ForMarketForUpdate(tx, marketID)
+	if err != nil {
+		return err
+	}
+
+	totalPool := 0
+	winningPool := 0
+
+	for _, b := range bets {
+		totalPool += b.Amount
+		if b.OutcomeID == outcomeID {
+			winningPool += b.Amount
+		}
+	}
+
+	distributed := 0
+	var firstWinner *models.Bet
+
+	for _, b := range bets {
+		if b.OutcomeID != outcomeID {
+			err = s.BetService.SetPayout(tx, b.ID, 0)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		if winningPool == 0 {
+			err = s.BetService.SetPayout(tx, b.ID, 0)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		payout := b.Amount * totalPool / winningPool
+		distributed += payout
+
+		if firstWinner == nil {
+			firstWinner = &b
+		}
+
+		err = s.BetService.SetPayout(tx, b.ID, payout)
+		if err != nil {
+			return err
+		}
+
+		err = s.UserService.IncreaseBalanceBy(tx, b.UserID, payout)
+		if err != nil {
+			return err
+		}
+	}
+
+	leftover := totalPool - distributed
+	if leftover > 0 && firstWinner != nil {
+		err = s.UserService.IncreaseBalanceBy(tx, firstWinner.UserID, leftover)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = s.Markets.ResolveMarket(tx, marketID, userID, outcomeID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

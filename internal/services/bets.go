@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
 	"foresee/internal/models"
 	"time"
@@ -77,4 +78,16 @@ func (s BetService) Place(userID uuid.UUID, marketID uuid.UUID, outcomeID uuid.U
 	}
 
 	return tx.Commit()
+}
+
+func (s BetService) GetUserBetHistory(userID uuid.UUID) ([]models.BetHistoryRow, error) {
+	return s.Bets.GetUserBetHistory(userID)
+}
+
+func (s BetService) ForMarketForUpdate(tx *sql.Tx, marketID uuid.UUID) ([]models.Bet, error) {
+	return s.Bets.ForMarketForUpdate(tx, marketID)
+}
+
+func (s BetService) SetPayout(tx *sql.Tx, betID uuid.UUID, payout int) error {
+	return s.Bets.SetPayout(tx, betID, payout)
 }

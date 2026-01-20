@@ -1,0 +1,4 @@
+ALTER TABLE IF EXISTS markets
+ADD COLUMN resolved_outcome_id UUID NULL,
+ADD COLUMN resolved_at TIMESTAMP NULL,
+ADD COLUMN resolved_by UUID NULL;

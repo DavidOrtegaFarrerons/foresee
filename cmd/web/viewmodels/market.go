@@ -26,6 +26,11 @@ func NewMarketView(m models.Market, loc *time.Location) MarketView {
 		totalPool += o.PoolAmount
 	}
 
+	status := m.Status
+	if status == "open" && m.ExpiresAt.Before(time.Now()) {
+		status = "expired"
+	}
+
 	return MarketView{
 		ID:          m.ID.String(),
 		Title:       m.Title,
@@ -33,7 +38,7 @@ func NewMarketView(m models.Market, loc *time.Location) MarketView {
 		Category:    string(m.Category),
 		Resolver:    string(m.ResolverType),
 		ExpiresAt:   m.ExpiresAt.In(loc).Format("2006-01-02 15:04"),
-		Status:      m.Status,
+		Status:      status,
 		Outcomes:    outcomes,
 		TotalPool:   totalPool,
 	}
