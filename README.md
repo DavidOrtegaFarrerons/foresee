@@ -4,7 +4,6 @@ Foresee is a small prediction market web application built as a learning project
 
 The goal of the project was to consolidate Go web fundamentals by building a complete application end to end, focusing on applying everything that I have learned by reading the book rather than feature richness or financial realism.
 
----
 
 ## Project Idea
 
@@ -12,7 +11,6 @@ Users can create markets by asking a question with a Yes and No outcomes. Other 
 
 Coins have no real-world value and exist only to explore backend logic and accounting behavior.
 
----
 
 ## Purpose
 
@@ -25,7 +23,7 @@ This project was built to:
 
 It is a learning and portfolio project, not a production product.
 
----
+
 
 ## Key Characteristics
 
@@ -34,7 +32,7 @@ It is a learning and portfolio project, not a production product.
 * Proportional payouts to winning bets
 * Server-rendered HTML using Go templates
 * Minimal dependencies, standard library first
----
+
 
 ## Challenges
 
@@ -42,7 +40,7 @@ It is a learning and portfolio project, not a production product.
 * Preventing double resolution and double payouts
 * Structuring code to keep responsibilities clear
 * Handling edge cases like no bets on the winning outcome
----
+
 
 ## How to Run
 
@@ -54,7 +52,7 @@ docker compose up -d --build
 
 Once the containers are up, the application will be available locally with no additional setup required.
 
----
+
 
 ## Pending Improvements
 
@@ -65,7 +63,7 @@ Once the containers are up, the application will be available locally with no ad
 * Improve error handling and messages
 * Add automated market expiration
 
----
+
 
 ## Summary
 

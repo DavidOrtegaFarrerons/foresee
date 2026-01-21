@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"foresee/internal/models"
 	"foresee/internal/services"
 	"html/template"
@@ -32,9 +31,16 @@ type application struct {
 }
 
 func main() {
-	addr := flag.String("addr", ":4000", "HTTP network address")
-	dsn := flag.String("db", "postgres://user:pass@postgres:5432/foresee?sslmode=disable", "Database connection string")
-	flag.Parse()
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4000"
+	}
+	addr := ":" + port
+
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "postgres://user:pass@localhost:5432/foresee?sslmode=disable"
+	}
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime)
@@ -48,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	db, err := openDb(*dsn)
+	db, err := openDb(dsn)
 
 	if err != nil {
 		log.Fatal(err)
@@ -137,7 +143,7 @@ func main() {
 		location:       location,
 	}
 
-	log.Printf("Starting server on %s", *addr)
-	err = http.ListenAndServe(*addr, app.routes())
+	log.Printf("Starting server on %s", addr)
+	err = http.ListenAndServe(addr, app.routes())
 	log.Fatal(err)
 }
