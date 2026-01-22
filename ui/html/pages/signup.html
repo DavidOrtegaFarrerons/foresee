@@ -48,6 +48,7 @@
                     <p class="text-sm text-text-muted text-center mb-8">Join the community and start making predictions</p>
 
                     <form action="/signup" method="POST" class="space-y-5">
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
 
                         <!-- Username -->
                         <div>

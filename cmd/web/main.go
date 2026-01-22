@@ -39,7 +39,7 @@ func main() {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://user:pass@localhost:5432/foresee?sslmode=disable"
+		dsn = "postgres://user:pass@postgres:5432/foresee?sslmode=disable"
 	}
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)

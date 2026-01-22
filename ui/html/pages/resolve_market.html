@@ -24,7 +24,7 @@
         </div>
 
         <form method="POST" action="/markets/{{.Market.ID}}/resolve" class="space-y-6">
-
+            <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
             <div class="space-y-3">
                 {{range .Market.Outcomes}}
                 <label class="flex items-center gap-3 p-4 rounded-lg border border-border-subtle cursor-pointer hover:bg-bg-main transition">

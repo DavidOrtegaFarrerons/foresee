@@ -45,6 +45,7 @@
                     action="/markets/{{$m.ID}}/bets"
                     class="hidden space-y-3"
             >
+                <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                 <input type="hidden" name="outcome_id">
 
                 <input

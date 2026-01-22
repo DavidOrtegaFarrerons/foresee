@@ -90,6 +90,7 @@
                         </h3>
 
                         <form method="POST" action="/markets/{{.Market.ID}}/bets" class="space-y-4">
+                            <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                             <input type="hidden" name="outcome_id" id="bet-outcome-id">
 
                             <div>

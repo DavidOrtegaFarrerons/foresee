@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
+
+	"github.com/justinas/nosurf"
 )
 
 type templateData struct {
@@ -17,6 +19,7 @@ type templateData struct {
 	Flash               string
 	FlashError          string
 	Form                any
+	CSRFToken           string
 	MarketCategories    []models.Category
 	ResolverTypes       []models.ResolverType
 	BetHistory          []models.BetHistoryRow
@@ -34,6 +37,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		MarketCategories: models.AllCategories(),
 		ResolverTypes:    models.AllResolverTypes(),
 		Balance:          0,
+		CSRFToken:        nosurf.Token(r),
 	}
 
 	if !data.IsAuthenticated {

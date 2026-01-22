@@ -7,7 +7,7 @@ import (
 
 func (app *application) routes() http.Handler {
 	router := http.NewServeMux()
-	baseChain := web.Chain{app.sessionManager.LoadAndSave, app.logRequest, app.authenticate}
+	baseChain := web.Chain{app.sessionManager.LoadAndSave, app.logRequest, app.authenticate, app.noSurf}
 	authChain := append(baseChain, app.requiresAuthentication)
 
 	fileServer := http.FileServer(

@@ -12,6 +12,7 @@
             </p>
 
             <form action="/login" method="POST" class="space-y-5">
+                <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
 
                 <!-- Email -->
                 <div>
