@@ -4,6 +4,7 @@ Foresee is a small prediction market web application built as a learning project
 
 The goal of the project was to consolidate Go web fundamentals by building a complete application end to end, focusing on applying everything that I have learned by reading the book rather than feature richness or financial realism.
 
+A live demo can be seen here: [foresee.davidortegafarrerons.com](https://foresee.davidortegafarrerons.com/)
 
 ## Project Idea
 
@@ -50,7 +51,7 @@ The project is fully containerized and works out of the box.
 docker compose up -d --build
 ```
 
-Once the containers are up, the application will be available locally with no additional setup required.
+Once the containers are up, the application will be available locally in [localhost](http://localhost:4000)
 
 
 
